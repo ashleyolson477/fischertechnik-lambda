@@ -1,0 +1,4 @@
+{
+  "lambda_function_name": "your-lambda-name",
+  "region": "your-region"
+}
