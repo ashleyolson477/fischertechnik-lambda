@@ -128,7 +128,7 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
 
 ## Appendices
 - [ ] Architecture Diagram
-- [ ] Node-RED flow export (optional)
+- [ ] Node-RED flow export [here](flows/temp_flow.json)
 - [ ] Useful links:
   - [AWS IoT Core Documentation](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html)
   - [Node-RED Documentation](https://nodered.org/docs/)
