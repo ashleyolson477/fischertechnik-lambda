@@ -17,8 +17,29 @@ This project documents the integration of a Fischertechnik factory model with AW
 ## System Architecture Overview
 The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS Lambda functions and logging data in CloudWatch for monitoring and analysis.
 
-**Architecture Diagram:**  
-*(Insert diagram here once available)*
+## System Architecture (Temporary Diagram)
+
+![Temporary Architecture Diagram](path/to/your/image.png)
+
+> **Note:** This is a temporary diagram representing the current architecture. Final version pending full system completion.
+
+### Architecture Description
+- **Factory:**  
+  - Collects live operational data from subsystems (Order Status, Piece Color, Stock, NFC Activity).
+- **Node-RED:**  
+  - Gathers the factory's local data and formats MQTT messages for cloud transmission.
+- **MQTT Protocol:**  
+  - Facilitates lightweight message transfer between the local system and AWS Cloud securely.
+- **AWS IoT Core:**  
+  - Receives MQTT messages.  
+  - Applies device certificates and policies for authentication and security.
+- **AWS Lambda:**  
+  - Processes incoming MQTT messages.
+  - Separates data into specific functions: `handleOrder()`, `handleRawMaterials()`, `handleStock()`, `handleNFCActivity()`.
+- **AWS CloudWatch:**  
+  - Stores and visualizes test metrics.
+  - Displays OrdersProcessed, RawMaterialsOrdered, and StockSlotsFilled to validate successful message processing.
+
 
 **Components:**
 - **Fischertechnik Factory** — physical factory model
@@ -62,9 +83,14 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
 - Created functions to process incoming factory messages.
 - Integrated with IoT Core topics.
 
-**AWS CloudWatch**:
-- Collected and visualized key factory metrics.
-- Set up alarms and dashboards (in progress).
+**AWS CloudWatch:** :
+- Collects custom factory metrics:
+  - `OrdersProcessed`
+  - `RawMaterialsOrdered`
+  - `StockSlotsFilled`
+- Metrics are published by AWS Lambda after processing incoming MQTT messages.
+- Basic CloudWatch dashboards were created to visualize these test metrics.
+- Dashboards validate that metric publishing and data tracking function correctly based on test payloads.
 
 ## Challenges and Troubleshooting Log
 | Date | Issue | Solution/Notes |
@@ -101,7 +127,7 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
 - Explore CI/CD pipeline integration for future deployments.
 
 ## Appendices
-- [ ] Architecture Diagram (to be added)
+- [ ] Architecture Diagram
 - [ ] Node-RED flow export (optional)
 - [ ] Useful links:
   - [AWS IoT Core Documentation](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html)
