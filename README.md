@@ -19,7 +19,7 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
 
 ## System Architecture (Temporary Diagram)
 
-![Temporary Architecture Diagram](path/to/your/image.png)
+![Temporary Architecture Diagram](architecture.png)
 
 > **Note:** This is a temporary diagram representing the current architecture. Final version pending full system completion.
 
