@@ -40,7 +40,6 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
   - Stores and visualizes test metrics.
   - Displays OrdersProcessed, RawMaterialsOrdered, and StockSlotsFilled to validate successful message processing.
 
-
 **Components:**
 - **Fischertechnik Factory** — physical factory model
 - **MQTT Protocol** — communication between factory and cloud
@@ -49,19 +48,29 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
 - **AWS CloudWatch** — metrics collection and monitoring
 
 ## Factory Metrics and Variables
-**Key metrics collected:**
-- `dashboardOrder`
-  - Status: `ordered`, `in process`, `shipped`
-  - Piece color: `red`, `blue`, `white`
-- `factoryStatus`
-  - Active stations
-  - Current piece locations
-- `stock`
-  - High-bay warehouse layout (grid: `a1`–`c3`)
-- `nfcReader`
-  - Piece ID
-  - Timestamp
-  - State of the piece
+
+This section describes the key data points and control variables used to monitor and manage the Fischertechnik factory via MQTT.
+
+### 🔧 MQTT-Based Metrics (Current Implementation)
+
+| Metric / Variable     | Description |
+|------------------------|-------------|
+| `order.type`           | The color of the piece being ordered (`RED`, `BLUE`, `WHITE`). Sent from cloud to factory via MQTT topic `f/o/order`. |
+| `order.ts`             | ISO-formatted UTC timestamp when the order was sent (e.g., `"2025-04-29T18:32:10Z"`). |
+| `stockItems`           | List of stock objects received via `f/i/stock`. Each object includes `workpiece.type`, `state`, and `location` in high-bay warehouse (`A1`–`C3`). |
+| `order.state`          | Current state of the order, e.g., `WAITING_FOR_ORDER`, `IN_PROCESS`, or `SHIPPED`. Received from the factory on topic `f/i/order`. |
+| `nfcReader`            | Reports detection of piece IDs and states, typically includes ID, timestamp, and status (planned integration). |
+| `fabric_ready`         | Boolean indicating if the factory is currently accepting new orders. Managed internally in the TXT controller logic. |
+| `HWR_Stocks`           | Dictionary of stock levels for each color (`WHITE`, `RED`, `BLUE`). Managed locally and sent via MQTT. |
+
+### ✅ MQTT Topics in Use
+
+| Topic            | Direction | Description |
+|------------------|-----------|-------------|
+| `factory/control`| Inbound   | Orders sent from AWS IoT (e.g., `{ "type": "RED" }`). |
+| `f/o/order`      | Outbound  | Formatted order messages sent to the factory (includes `type` and `ts`). |
+| `f/i/order`      | Inbound   | Order state updates sent by the factory to the cloud. |
+| `f/i/stock`      | Inbound   | Stock data (array of item states and positions). Used to update cloud dashboard or metrics. |
 
 ## MQTT Communication Setup
 - **Local Testing**:
@@ -133,4 +142,3 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
   - [AWS IoT Core Documentation](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html)
   - [Node-RED Documentation](https://nodered.org/docs/)
   - [MQTT Protocol Specification](http://mqtt.org/)
-
