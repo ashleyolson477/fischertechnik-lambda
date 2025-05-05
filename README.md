@@ -4,18 +4,19 @@
 - [Introduction](#introduction)
 - [System Architecture Overview](#system-architecture-overview)
 - [Factory Metrics and Variables](#factory-metrics-and-variables)
+- [Node-RED Flows and Cloud Messaging](#node-red-flows-and-cloud-messaging)
 - [MQTT Communication Setup](#mqtt-communication-setup)
-- [AWS Integration](#aws-integration)
+- [AWS Integration (Testing Only)](#aws-integration-testing-only)
 - [Challenges and Troubleshooting Log](#challenges-and-troubleshooting-log)
 - [Progress Documentation](#progress-documentation)
 - [Future Work and Next Steps](#future-work-and-next-steps)
 - [Appendices](#appendices)
 
 ## Introduction
-This project documents the integration of a Fischertechnik factory model with AWS services using MQTT communication protocols. The goal is to enable cloud-based control, monitoring, and automation of the factory's operations.
+This project documents the integration of a Fischertechnik factory model with AWS services using MQTT communication protocols. The goal is to enable cloud-based control, monitoring, and automation of the factory's operations using Node-RED as the bridge.
 
 ## System Architecture Overview
-The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS Lambda functions and logging data in CloudWatch for monitoring and analysis.
+The system uses MQTT to transmit factory data to and from the cloud. Node-RED is the central integration point for managing messaging between AWS IoT Core and the local factory system.
 
 ## System Architecture (Temporary Diagram)
 
@@ -25,86 +26,102 @@ The system uses MQTT to transmit factory data to AWS IoT Core, triggering AWS La
 
 ### Architecture Description
 - **Factory:**  
-  - Collects live operational data from subsystems (Order Status, Piece Color, Stock, NFC Activity).
+  - Executes physical actions and publishes live data such as order status, NFC scans, and stock levels.
 - **Node-RED:**  
-  - Gathers the factory's local data and formats MQTT messages for cloud transmission.
+  - Acts as the local MQTT orchestrator, sending and receiving MQTT messages between AWS and the factory.
 - **MQTT Protocol:**  
-  - Facilitates lightweight message transfer between the local system and AWS Cloud securely.
+  - Lightweight communication protocol used for device-to-cloud and cloud-to-device messaging.
 - **AWS IoT Core:**  
-  - Receives MQTT messages.  
-  - Applies device certificates and policies for authentication and security.
-- **AWS Lambda:**  
-  - Processes incoming MQTT messages.
-  - Separates data into specific functions: `handleOrder()`, `handleRawMaterials()`, `handleStock()`, `handleNFCActivity()`.
-- **AWS CloudWatch:**  
-  - Stores and visualizes test metrics.
-  - Displays OrdersProcessed, RawMaterialsOrdered, and StockSlotsFilled to validate successful message processing.
-
-**Components:**
-- **Fischertechnik Factory** — physical factory model
-- **MQTT Protocol** — communication between factory and cloud
-- **AWS IoT Core** — MQTT broker in the cloud
-- **AWS Lambda** — serverless functions to process messages
-- **AWS CloudWatch** — metrics collection and monitoring
+  - Receives MQTT messages and was used for testing cloud connectivity and message formatting.
+- **AWS Lambda & CloudWatch:**  
+  - Used for simulation and debugging only. Not integrated with live factory data.
 
 ## Factory Metrics and Variables
 
-This section describes the key data points and control variables used to monitor and manage the Fischertechnik factory via MQTT.
+This section describes the key data points used in the live Node-RED-to-factory implementation.
 
-### 🔧 MQTT-Based Metrics (Current Implementation)
+### 🔧 MQTT-Based Metrics (Used in Node-RED)
 
 | Metric / Variable     | Description |
 |------------------------|-------------|
-| `order.type`           | The color of the piece being ordered (`RED`, `BLUE`, `WHITE`). Sent from cloud to factory via MQTT topic `f/o/order`. |
+| `order.type`           | The color of the piece being ordered (`RED`, `BLUE`, `WHITE`). Sent from cloud to factory via `f/o/order`. |
 | `order.ts`             | ISO-formatted UTC timestamp when the order was sent (e.g., `"2025-04-29T18:32:10Z"`). |
-| `stockItems`           | List of stock objects received via `f/i/stock`. Each object includes `workpiece.type`, `state`, and `location` in high-bay warehouse (`A1`–`C3`). |
-| `order.state`          | Current state of the order, e.g., `WAITING_FOR_ORDER`, `IN_PROCESS`, or `SHIPPED`. Received from the factory on topic `f/i/order`. |
-| `nfcReader`            | Reports detection of piece IDs and states, typically includes ID, timestamp, and status (planned integration). |
-| `fabric_ready`         | Boolean indicating if the factory is currently accepting new orders. Managed internally in the TXT controller logic. |
-| `HWR_Stocks`           | Dictionary of stock levels for each color (`WHITE`, `RED`, `BLUE`). Managed locally and sent via MQTT. |
+| `nfcReader`            | Reports detection of piece IDs and states. Each message includes `workpiece.id`, `ts`, and a status like `PLACED` or `REMOVED`. |
+| `workpiece.location`   | Factory sends warehouse item positions (e.g., `a1`, `b3`) for cloud tracking after matching with scanned NFC tag. |
 
-### ✅ MQTT Topics in Use
+### MQTT Topics in Use (Live in Node-RED)
 
-| Topic            | Direction | Description |
-|------------------|-----------|-------------|
-| `factory/control`| Inbound   | Orders sent from AWS IoT (e.g., `{ "type": "RED" }`). |
-| `f/o/order`      | Outbound  | Formatted order messages sent to the factory (includes `type` and `ts`). |
-| `f/i/order`      | Inbound   | Order state updates sent by the factory to the cloud. |
-| `f/i/stock`      | Inbound   | Stock data (array of item states and positions). Used to update cloud dashboard or metrics. |
+| Topic                   | Direction | Description |
+|-------------------------|-----------|-------------|
+| `factory/control`       | Inbound   | Orders sent from AWS to Node-RED (`{ "type": "RED" }`). |
+| `f/o/order`             | Outbound  | Formatted order message (type + timestamp) sent to factory. |
+| `fl/i/nfc/ds`           | Inbound   | NFC scan result including UID and type from factory. |
+| `f/i/stock`             | Inbound   | Full stock list including item IDs and locations. Used to match NFC UIDs. |
+| `factory/warehouse/state` | Outbound | Final cloud-published message containing matched `type`, `location`, and `timestamp`. |
+
+---
+
+## Node-RED Flows and Cloud Messaging
+
+### Flow 1: **AWS-to-Factory Order Flow**  
+**Flow Name:** `Ashley_MQTT Factory Control`  
+**Purpose:** Allows AWS to trigger factory orders based on color selection.
+
+#### Components:
+- **`mqtt in (factory/control)`**: Listens to AWS for an order message (`{ type: "RED" }`).
+- **`function (Parse AWS Stock Order)`**: Formats color and adds a timestamp.
+- **`switch (Which Color to Order?)`**: Branches logic based on `RED`, `BLUE`, or `WHITE`.
+- **`function (Log RED/BLUE/WHITE Order)`**: Logs outgoing order in debug sidebar.
+- **`mqtt out (f/o/order)`**: Sends message to the local broker to control the factory.
+
+---
+
+### Flow 2: **Factory-to-AWS Warehouse Flow**  
+**Flow Name:** `Ashley_MQTT Cloud Recieve`  
+**Purpose:** Correlates NFC scan data with current warehouse stock to track workpiece locations.
+
+#### Components:
+- **`mqtt in (fl/i/nfc/ds)`**: Receives the latest scanned UID from the NFC reader.
+- **`function (Store Last Scanned UID)`**: Stores UID temporarily for comparison.
+- **`mqtt in (f/i/stock)`**: Receives current stock layout from the factory.
+- **`function (Match UID and Publish)`**: Matches scanned UID to warehouse item and formats a payload `{ type, location, ts }`.
+- **`mqtt out (factory/warehouse/state)`**: Publishes matched result to AWS IoT Core.
+- **`debug`**: Displays final cloud message in the debug sidebar.
+
+---
 
 ## MQTT Communication Setup
-- **Local Testing**:
-  - Set up a Mosquitto broker.
-  - Tested message publishing using `mosquitto_pub`.
-- **Cloud Integration**:
-  - Transitioned to AWS IoT Core using device certificates.
-  - Used Node-RED for MQTT message publishing.
-- **Testing Methods**:
-  - Inject nodes in Node-RED.
-  - Verified message receipt in AWS IoT Core logs.
 
-## AWS Integration
+- **Local Testing**:
+  - Used a Mosquitto broker to verify basic message sending.
+- **AWS IoT Core Integration**:
+  - Configured MQTT broker credentials and TLS certificates.
+  - Connected AWS topics to Node-RED using secure MQTT input/output nodes.
+
+---
+
+## AWS Integration (Testing Only)
+
 **AWS IoT Core**:
-- Created "Things" and attached security certificates.
-- Configured IoT policies for secure messaging.
+- Created AWS “Things” with security certificates.
+- Used only to verify MQTT connectivity between AWS and Node-RED.
 
 **AWS Lambda**:
-- Created functions to process incoming factory messages.
-- Integrated with IoT Core topics.
+- Used for early testing to simulate how factory messages might be processed.
+- Not connected to the live factory system.
 
-**AWS CloudWatch:** :
-- Collects custom factory metrics:
-  - `OrdersProcessed`
-  - `RawMaterialsOrdered`
-  - `StockSlotsFilled`
-- Metrics are published by AWS Lambda after processing incoming MQTT messages.
-- Basic CloudWatch dashboards were created to visualize these test metrics.
-- Dashboards validate that metric publishing and data tracking function correctly based on test payloads.
+**AWS CloudWatch**:
+- Temporarily used to simulate metric logging and visualize test payloads.
+- Not integrated into the live data pipeline.
+
+---
 
 ## Challenges and Troubleshooting Log
 | Date | Issue | Solution/Notes |
 |-----|------|----------------|
 | (Add entries here) | | |
+
+---
 
 ## Progress Documentation
 | Date | Progress Made | Challenges Faced | Next Steps |
@@ -129,11 +146,14 @@ This section describes the key data points and control variables used to monitor
 | 4/23 | Focused on NFC reader integration, cloud-to-factory messaging, and manual creation. | See Progress Made. | Contact Fabian. Complete system manual. |
 | 4/24 | Collaborated with Fabian. Fixed Node-RED IP address issue causing cloud-to-cloud messaging loop. | See Progress Made. | Ensure Node-RED connects properly to the factory. Continue manual development. |
 
+---
+
 ## Future Work and Next Steps
-- Implement full automation using AWS Lambda triggers.
-- Improve CloudWatch dashboards for better visualization.
-- Expand system to include more sensor data and analytics.
-- Explore CI/CD pipeline integration for future deployments.
+- Add automation logic for warehouse control using Node-RED.
+- Consider secure logging or external dashboard (e.g., Grafana) if time allows.
+- Fully document current JSON message formats and flows.
+
+---
 
 ## Appendices
 - [ ] Architecture Diagram
