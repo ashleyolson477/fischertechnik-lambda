@@ -130,8 +130,8 @@ if (payload.status === "stored") {
     ]
   });
   await cloudwatch.send(metric);
-}```
-
+}
+```
 
 **AWS CloudWatch**:
 - Metrics sent by Lambda appear under the `Factory` namespace.
