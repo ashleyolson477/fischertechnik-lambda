@@ -108,38 +108,91 @@ The factory accepts only the following workpiece color types as valid order inpu
 - Serves as the secure MQTT broker for communication between AWS and Node-RED.
 - Receives incoming cloud orders and publishes factory updates.
 
-## AWS Lambda & CloudWatch (Testing Only)
+## AWS Lambda & CloudWatch Integration
 
 **AWS Lambda**:
-- Used for early testing purposes to simulate how MQTT messages from the factory might be processed in the cloud.
-- It was not connected to any live factory components.
-- No Lambda functions were used in the final product.
+- Lambda was used during development for testing message handling logic, even without access to the live factory.
+- Lambda function `iotdataprocessor` processes messages sent to AWS IoT Core topics such as `factory/warehouse/state`.
+- When it receives a message with `status: "stored"`, it sends a custom CloudWatch metric (`ItemsStored`) with a `Color` dimension.
+
+**Lambda Metric Code Snippet:**
+```javascript
+if (payload.status === "stored") {
+  const metric = new PutMetricDataCommand({
+    Namespace: "Factory",
+    MetricData: [
+      {
+        MetricName: "ItemsStored",
+        Dimensions: [{ Name: "Color", Value: payload.color || "unknown" }],
+        Unit: "Count",
+        Value: 1
+      }
+    ]
+  });
+  await cloudwatch.send(metric);
+}
+
 
 **AWS CloudWatch**:
-- Used for basic testing and simulation of metric tracking during early stages of development.
-- CloudWatch dashboards were created to verify test payload formats only.
-- No live data from the factory was visualized or logged using CloudWatch in the final system.
+- Metrics sent by Lambda appear under the `Factory` namespace.
+- Metrics are visualized in CloudWatch using graphs, filtered by the `Color` dimension.
+- A line graph widget was added to a dashboard to track how many workpieces of each color were stored over time.
+- This metric tracking works without needing the physical factory, by publishing test messages through the AWS IoT Core MQTT test client.
 
-## Debug Output Examples
+**CloudWatch Graph Configuration:**
+- **Metric Name**: `ItemsStored`
+- **Namespace**: `Factory`
+- **Dimension**: `Color=white`, `Color=red`, `Color=blue`, etc.
+- **Statistic**: `Sum`
+- **Period**: `1 minute`
+- **View**: Line graph in a CloudWatch dashboard
+- **Refresh time**: Metric data typically appears within 1–2 minutes of publishing a valid message
 
-Below is a real sample of Node-RED debug logs showing the UID matching process and final message sent to AWS:
+**Testing Instructions:**
+1. Go to **AWS IoT Core → MQTT test client**
+2. Publish the following message to the topic: `factory/warehouse/state`
+```json
+{
+  "location": "b2",
+  "color": "white",
+  "status": "stored"
+}```
+3. Go to **CloudWatch → Logs → `/aws/lambda/iotdataprocessor`** to verify that Lambda processed the message and logged
+4. Then, go to **CloudWatch → Metrics → Custom → Factory → ItemsStored**
+5. Select the `Color = white` metric and add it to a graph with the following settings:
 
-5/2/2025, 5:02:02 PM node: Match UID and Publish
+- **Statistic:** `Sum`
+- **Period:** `1 minute`
+- **Time range:** `Last 5–15 minutes`
+
+6. Once the message is published and the metric appears, the line graph will update to reflect the count.
+>Tip: Publish multiple messages in a row to see the graph trend over time.
+
+
+## Debug Output Examples (Node-RED)
+
+The following are real debug logs captured from **Node-RED**, showing how the system processes NFC tag scans and publishes matched warehouse state messages to AWS IoT Core. These logs are visible in the Node-RED debug sidebar and were used to verify correct factory behavior and cloud messaging during development.
+
+```plaintext
+5/2/2025, 5:02:02 PM  node: Match UID and Publish
 function : (warn)
 "UID not matched: 044270ca341290"
 
-5/2/2025, 5:02:04 PM node: Match UID and Publish
+5/2/2025, 5:02:04 PM  node: Match UID and Publish
 function : (warn)
 "UID not matched: 044270ca341290"
 
-5/2/2025, 5:02:07 PM node: Match UID and Publish
+5/2/2025, 5:02:07 PM  node: Match UID and Publish
 function : (warn)
 "Matched UID: 044270ca341290"
 
-5/2/2025, 5:02:07 PM node: AWS Payload Debug
+5/2/2025, 5:02:07 PM  node: AWS Payload Debug
 f/i/stock : msg.payload : Object
-{ type: "white", location: "c1", ts: "2025-05-03T00:02:06.486Z" }
-
+{
+  type: "white",
+  location: "c1",
+  ts: "2025-05-03T00:02:06.486Z"
+}```
 
 ## Progress Documentation
 
