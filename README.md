@@ -1,4 +1,5 @@
 # Fischertechnik Factory Cloud Integration
+![Factory Image](factory.jpg)
 
 ## Table of Contents
 - [Introduction](#introduction)
