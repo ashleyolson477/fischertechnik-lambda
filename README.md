@@ -27,11 +27,9 @@ The factory accepts only the following workpiece color types as valid order inpu
 - `BLUE`
 - `WHITE`
 
-## System Architecture (Temporary Diagram)
+## System Architecture
 
-![Temporary Architecture Diagram](architecture.png)
-
-> **Note:** This is a temporary diagram representing the current architecture. Final version pending full system completion.
+![Architecture Diagram](architecture.png)
 
 ### Architecture Description
 - **Factory:**  
