@@ -240,6 +240,9 @@ f/i/stock : msg.payload : Object
 
 ## Appendices
 - [ ] Architecture Diagram
+- [ ] Factory-4.0-Guide Github [https://github.com/BoostedJ/Factory-4.0-Guide?tab=readme-ov-file]
+- [ ] MQTT Interface Fischertechnik Github [https://github.com/fischertechnik/txt_training_factory/blob/master/TxtSmartFactoryLib/doc/MqttInterface.md]
+- [ ] Login Credentials[https://docs.google.com/document/d/1PxL4VxPzMO6FwuO9nOJwjydyvzU8517Sn3vGIZw0giA/edit?usp=sharing]
 - [ ] Node-RED flow export [here](flows/temp_flow.json)
 - [ ] Useful links:
   - [AWS IoT Core Documentation](https://docs.aws.amazon.com/iot/latest/developerguide/what-is-aws-iot.html)
