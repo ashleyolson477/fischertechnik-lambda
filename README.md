@@ -156,7 +156,8 @@ if (payload.status === "stored") {
   "location": "b2",
   "color": "white",
   "status": "stored"
-}```
+}
+```
 3. Go to **CloudWatch → Logs → `/aws/lambda/iotdataprocessor`** to verify that Lambda processed the message and logged
 4. Then, go to **CloudWatch → Metrics → Custom → Factory → ItemsStored**
 5. Select the `Color = white` metric and add it to a graph with the following settings:
@@ -192,7 +193,8 @@ f/i/stock : msg.payload : Object
   type: "white",
   location: "c1",
   ts: "2025-05-03T00:02:06.486Z"
-}```
+}
+```
 
 ## Progress Documentation
 
