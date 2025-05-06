@@ -239,7 +239,6 @@ f/i/stock : msg.payload : Object
 - Actively monitor AWS Free Tier usage and adapt architecture to remain cost-effective as the system scales.
 
 ## Appendices
-- [ ] Architecture Diagram
 - [ ] [Factory-4.0-Guide GitHub](https://github.com/BoostedJ/Factory-4.0-Guide?tab=readme-ov-file)
 - [ ] [MQTT Interface Fischertechnik GitHub](https://github.com/fischertechnik/txt_training_factory/blob/master/TxtSmartFactoryLib/doc/MqttInterface.md)
 - [ ] [Login Credentials (Google Doc)](https://docs.google.com/document/d/1PxL4VxPzMO6FwuO9nOJwjydyvzU8517Sn3vGIZw0giA/edit?usp=sharing)
