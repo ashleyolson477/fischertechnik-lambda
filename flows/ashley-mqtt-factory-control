@@ -2,7 +2,7 @@
     {
       "id": "1f22ede9.6adeda",
       "type": "tab",
-      "label": "MQTT Factory Control",
+      "label": "Ashley_MQTT Factory Control",
       "disabled": false,
       "info": ""
     },
@@ -190,6 +190,16 @@
       "wires": []
     },
     {
+      "id": "d66ca753.8bf318",
+      "type": "comment",
+      "z": "1f22ede9.6adeda",
+      "name": "Order Colors from the HBW Through AWS",
+      "info": "This flow orders blue, red, or white parts from publishing through AWS IoT Core and sends that to Node-Red which triggers the factory to select the highest priority color to move to the MPU.",
+      "x": 220,
+      "y": 100,
+      "wires": []
+    },
+    {
       "id": "788959e0.92f718",
       "type": "mqtt-broker",
       "z": "",
@@ -238,7 +248,7 @@
       "id": "c1c8f379.d43cb",
       "type": "tls-config",
       "z": "",
-      "name": "",
+      "name": "Fabian_TLS",
       "cert": "",
       "key": "",
       "ca": "",
