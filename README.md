@@ -130,7 +130,7 @@ if (payload.status === "stored") {
     ]
   });
   await cloudwatch.send(metric);
-}
+}```
 
 
 **AWS CloudWatch**:
