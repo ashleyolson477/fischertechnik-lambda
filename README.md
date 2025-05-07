@@ -144,16 +144,16 @@ The factory accepts only the following workpiece color types as valid order inpu
 ## AWS Integration
 
 **AWS IoT Core**:
-- Fully integrated into the final system.
 - Serves as the secure MQTT broker for communication between AWS and Node-RED.
 - Receives incoming cloud orders and publishes factory updates.
 
 ## AWS Lambda & CloudWatch Integration
 
 **AWS Lambda**:
-- Lambda was used during development for testing message handling logic, even without access to the live factory.
-- Lambda function `iotdataprocessor` processes messages sent to AWS IoT Core topics such as `factory/warehouse/state`.
-- When it receives a message with `status: "stored"`, it sends a custom CloudWatch metric (`ItemsStored`) with a `Color` dimension.
+- Lambda was used to process messages published to the `factory/warehouse/state` topic.
+- The function `iotdataprocessor` checks if the incoming payload includes `status: "stored"`.
+- When that condition is met, it sends a custom CloudWatch metric named `ItemsStored`, with a `Color` dimension based on the `color` field in the payload (Note: Only 'white' is currently implemented in CloudWatch).
+- This allows you to monitor how many items of each color (e.g., white) have been stored in the warehouse.
 
 **Lambda Metric Code Snippet:**
 ```javascript
@@ -171,7 +171,6 @@ if (payload.status === "stored") {
   });
   await cloudwatch.send(metric);
 }
-```
 
 **AWS CloudWatch**:
 - Metrics sent by Lambda appear under the `Factory` namespace.
@@ -252,7 +251,7 @@ f/i/stock : msg.payload : Object
 | 3/11 | Attempted AWS IoT Core connection using certificates. | Lack of root access to factory device. | Obtain root username/password. Prepare USB backup. |
 | 3/18 | Focused on alternative methods to move forward without full credentials. | Still awaiting factory credentials. | Simulate IoT Core in Lambda. Continue Lambda work until lab access. |
 | 3/24 | Built Lambda functions without factory connection. Researched MQTT broker setups. Investigated Grafana for visualization. | Limited by lack of factory access. Confusion around AWS Lambda billing. | Review Lambda billing. Continue Lambda preparation. |
-| 3/25 | Set up Lambda and CloudWatch monitoring (OrdersProcessed, RawMaterialsOrdered). Built a basic CI/CD pipeline for testing. | Difficulty filtering CloudWatch metrics. Uploading files to Lambda required troubleshooting. | Set up CloudWatch metrics for NFC reader. Sync AWS setup with GitHub. |
+| 3/25 | Set up Lambda and CloudWatch monitoring (OrdersProcessed, RawMaterialsOrdered). Built a basic CI/CD pipeline for testing (ended up not using). | Difficulty filtering CloudWatch metrics. Uploading files to Lambda required troubleshooting. | Set up CloudWatch metrics for NFC reader. Sync AWS setup with GitHub. |
 | 3/27 | SSH connection to factory established. Certificates manually transferred. Custom MQTT bridge config created. Node-RED selected as MQTT publisher. | SCP failed due to PowerShell quoting issues. No sudo access. Could not run Mosquitto manually. | Fully integrate Node-RED MQTT bridge. |
 | 4/7 | Factory connected to AWS IoT Core via Node-RED. Test MQTT messages confirmed in AWS. | Troubles configuring certificates and policies correctly. | Publish messages from all factory systems. Integrate data into CloudWatch and Lambda. |
 | 4/9 | Node-RED test flow reconnected. Lambda processed messages. CloudWatch metrics (OrdersProcessed, RawMaterialsOrdered, StockSlotsFilled) added. | Lambda initially lacked CloudWatch metric publishing permissions. | Add PTU movement and station activity metrics. Improve dashboard visualization. Plan automation. |
@@ -261,6 +260,11 @@ f/i/stock : msg.payload : Object
 | 4/24 | Collaborated with Fabian. Fixed Node-RED IP address issue causing cloud-to-cloud messaging loop. | See Progress Made. | Ensure Node-RED connects properly to the factory. Continue manual development. |
 
 ## Future Work and Next Steps
+
+### Lambda + CloudWatch Integration
+- Continue developing Lambda-based logging and metrics for all part colors (e.g., blue, red, white) using CloudWatch.
+- Ensure full end-to-end integration with the physical factory: Lambda functions should respond to real warehouse events, and CloudWatch should accurately reflect factory state in real time.
+- Explore additional metrics such as failed UID matches, processing delays, or command success rates.
 
 ### Real-Time Tracking
 - Expand the system to support full real-time tracking of all moving components in the factory.
