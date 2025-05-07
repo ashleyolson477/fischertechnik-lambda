@@ -97,18 +97,19 @@ The factory accepts only the following workpiece color types as valid order inpu
 
 #### Inbound (Messages Received by Node-RED from Cloud or Factory)
 
-| Topic                 | Description |
-|-----------------------|-------------|
-| `factory/control`     | Orders sent from AWS to Node-RED in the form `{ "type": "RED" }`. |
-| `fl/i/nfc/ds`         | NFC scan events from the factory. Contains `workpiece.id`, `type`, `state`, and `ts`. |
-| `f/i/stock`           | Current stock layout from the factory, used to match scanned NFC tags. |
+| Topic                    | Description |
+|--------------------------|-------------|
+| `factory/control`        | Orders sent from AWS IoT Core to Node-RED in the form `{ "type": "RED" }`. Parsed and routed by color. |
+| `fl/i/nfc/ds`            | NFC scan events published by the factory. Contains `workpiece.id`, `type`, `state`, and `ts`. Stores UID for later matching. |
+| `f/i/stock`              | High-bay warehouse stock layout published by the factory. Contains a list of `stockItems` with location and workpiece ID/type. |
 
 #### Outbound (Messages Sent from Node-RED to Factory or AWS)
 
 | Topic                     | Description |
 |---------------------------|-------------|
-| `f/o/order`               | Formatted order messages (type + timestamp) sent to the factory to begin processing. |
-| `factory/warehouse/state` | Result of NFC+stock match sent to AWS IoT Core. Contains `type`, `location`, and `ts`. |
+| `f/o/order`               | Formatted part order messages (e.g., `{ "type": "RED", "ts": "..." }`) sent to the factory to begin processing a part of the specified color. |
+| `factory/warehouse/state` | Published to AWS after a scanned UID is matched to an item in stock. Contains `type`, `location`, and `ts`. |
+
 
 ## Node-RED Flows and Cloud Messaging
 
