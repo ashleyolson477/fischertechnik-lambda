@@ -19,7 +19,7 @@ This project documents the integration of a Fischertechnik factory model with AW
 ## System Architecture Overview
 The system uses MQTT to transmit factory data between the cloud and the physical factory. Node-RED serves as the central control logic for parsing, transforming, and routing messages.
 
-Parts of the factory's original Python control logic (such as the structure of NFC payloads in `Nfc_MQTT.py`) were used as a **template** when building the Node-RED message flows. Although the Python code was not executed directly, its logic for publishing NFC data (including fields like `workpiece.id`, `type`, `state`, and `ts`) and using topics like `fl/i/nfc/ds` served as the conceptual basis for how Node-RED receives, processes, and publishes messages.
+Parts of the factory's original Python control logic (such as the structure of NFC payloads in `Nfc_MQTT.py`) were used as a **template** when building the Node-RED message flows. Although the Python code was not executed directly, its logic for publishing NFC data (including fields like `workpiece.id`, `type`, `state`, and `ts`) and using topics like `fl/i/nfc/ds` served as the conceptual basis for how Node-RED receives, processes, and publishes messages. To see these files, login to the TxT controller (Local Flow under Login Credentials, see Appendices at the bottom of page).
 
 ### Factory Control Options:
 The factory accepts only the following workpiece color types as valid order inputs:
@@ -33,7 +33,7 @@ The factory accepts only the following workpiece color types as valid order inpu
 
 ### System Components
 
-1. **Factory Hardware (TxT Controller & Sensors):**  
+1. **Factory Hardware (TxT Controller):**  
    Executes physical actions (e.g., moving items) and detects events like NFC scans or stock changes.
 
 2. **Raspberry Pi (connected via USB to TxT Controller):**  
@@ -46,7 +46,7 @@ The factory accepts only the following workpiece color types as valid order inpu
    Subscribes to local MQTT topics and relays telemetry to AWS IoT Core using secure MQTT over TLS. Also receives cloud commands and forwards them to the local broker.
 
 5. **AWS IoT Core:**  
-   Cloud-based MQTT broker that securely transmits messages between the factory system and AWS services.
+   Cloud-based MQTT broker that securely transmits messages between the factory system and AWS services using Node-RED.
 
 6. **Amazon CloudWatch Logs and Metrics:**  
    Logs MQTT payloads for debugging and updates dashboards with factory telemetry (e.g., stock, order status).
@@ -62,7 +62,7 @@ The factory accepts only the following workpiece color types as valid order inpu
    - **Connection:** USB serial or GPIO (physical interface)  
    - **Purpose:** Transmit factory events (e.g., sensor states) to the Pi for processing.
 
-2. **Raspberry Pi to Local MQTT Broker:**  
+2. **Raspberry Pi to Local MQTT Broker (Node-RED):**  
    - **Protocol:** MQTT  
    - **Purpose:** Publishes telemetry (e.g., stock levels, NFC scans) to Node-RED for local processing and forwarding.
 
@@ -74,17 +74,13 @@ The factory accepts only the following workpiece color types as valid order inpu
    - **Protocol:** MQTT over TLS  
    - **Purpose:** Securely transmits factory telemetry to the cloud.
 
-5. **AWS IoT Core to CloudWatch:**  
+5. **AWS IoT Core to Lambda:**  
    - **Integration:** Native AWS integration  
-   - **Purpose:** Logs MQTT payloads and updates metrics for visualization.
+   - **Purpose:** Creates rules for IoT Core messages to be processed by CloudWatch.
 
-6. **AWS IoT Core to Lambda (optional):**  
-   - **Trigger:** MQTT message or metric threshold  
-   - **Purpose:** Executes automation logic or processing routines.
-
-7. **Cloud to Factory (AWS IoT Core → Node-RED → Factory):**  
-   - **Protocol:** MQTT over TLS (cloud to Pi), then local MQTT (to factory)  
-   - **Purpose:** Sends commands (e.g., test messages) from cloud to the TxT Controller for physical execution.
+6. **AWS Lambda to CloudWatch:**  
+   - **Trigger:** Native AWS integration  
+   - **Purpose:** Displays logged metrics for in and outbound messages to and from factory.
 
 ## Factory Metrics and Variables
 
