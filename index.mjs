@@ -1,6 +1,6 @@
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 
-const cloudwatch = new CloudWatchClient({ region: "us-east-1" }); // Replace with your region
+const cloudwatch = new CloudWatchClient({ region: "us-east-1" });
 
 export const handler = async (event) => {
   console.log("IoT Message Received:", JSON.stringify(event));
