@@ -9,7 +9,6 @@
 - [MQTT Communication Setup](#mqtt-communication-setup)
 - [AWS Integration](#aws-integration)
 - [AWS Lambda & CloudWatch Integration](#aws-lambda--cloudwatch-integration)
-- [Debug Output Examples](#debug-output-examples-node-red)
 - [Debug Output Examples (Node-RED)](#debug-output-examples-node-red)
 - [Future Work and Next Steps](#future-work-and-next-steps)
 - [Appendices](#appendices)
