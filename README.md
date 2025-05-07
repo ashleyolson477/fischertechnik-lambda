@@ -7,7 +7,7 @@
 - [Factory Metrics and Variables](#factory-metrics-and-variables)
 - [Node-RED Flows and Cloud Messaging](#node-red-flows-and-cloud-messaging)
 - [MQTT Communication Setup](#mqtt-communication-setup)
-- [AWS Integration](#aws-integration)
+- [AWS IotCore Integration](#aws-integration)
 - [AWS Lambda & CloudWatch Integration](#aws-lambda--cloudwatch-integration)
 - [Debug Output Examples (Node-RED)](#debug-output-examples-node-red)
 - [Future Work and Next Steps](#future-work-and-next-steps)
