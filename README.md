@@ -32,15 +32,60 @@ The factory accepts only the following workpiece color types as valid order inpu
 
 ![Architecture Diagram](architecture.png)
 
-### Architecture Description
-- **Factory:**  
-  Executes physical actions and publishes live data such as order status, NFC scans, and stock levels.
-- **Node-RED:**  
-  Acts as the MQTT orchestrator. Integrates logic derived from the TXT controller to translate cloud commands into physical actions.
-- **MQTT Protocol:**  
-  Used for secure and lightweight messaging between AWS and the local factory system.
-- **AWS IoT Core:**  
-  Serves as the secure MQTT broker for communicating between the factory and the cloud.
+### System Components
+
+1. **Factory Hardware (TxT Controller & Sensors):**  
+   Executes physical actions (e.g., moving items) and detects events like NFC scans or stock changes.
+
+2. **Raspberry Pi (connected via USB to TxT Controller):**  
+   Acts as the bridge between physical components and the software layer. Publishes and receives MQTT messages via Node-RED.
+
+3. **Local Node-RED (on Raspberry Pi):**  
+   Orchestrates local logic. Converts sensor events into MQTT messages and routes commands to the TxT Controller.
+
+4. **Cloud-Connected Node-RED:**  
+   Subscribes to local MQTT topics and relays telemetry to AWS IoT Core using secure MQTT over TLS. Also receives cloud commands and forwards them to the local broker.
+
+5. **AWS IoT Core:**  
+   Cloud-based MQTT broker that securely transmits messages between the factory system and AWS services.
+
+6. **Amazon CloudWatch Logs and Metrics:**  
+   Logs MQTT payloads for debugging and updates dashboards with factory telemetry (e.g., stock, order status).
+
+7. **AWS Lambda:**  
+   Executes cloud-side logic in response to telemetry (e.g., parsing events, sending alerts, or future automation triggers).
+
+---
+
+### Message Flow and Protocols
+
+1. **Factory to Raspberry Pi:**  
+   - **Connection:** USB serial or GPIO (physical interface)  
+   - **Purpose:** Transmit factory events (e.g., sensor states) to the Pi for processing.
+
+2. **Raspberry Pi to Local MQTT Broker:**  
+   - **Protocol:** MQTT  
+   - **Purpose:** Publishes telemetry (e.g., stock levels, NFC scans) to Node-RED for local processing and forwarding.
+
+3. **Local Node-RED to Cloud-Connected Node-RED:**  
+   - **Protocol:** MQTT (within the same network)  
+   - **Purpose:** Shares internal factory messages for cloud forwarding.
+
+4. **Cloud-Connected Node-RED to AWS IoT Core:**  
+   - **Protocol:** MQTT over TLS  
+   - **Purpose:** Securely transmits factory telemetry to the cloud.
+
+5. **AWS IoT Core to CloudWatch:**  
+   - **Integration:** Native AWS integration  
+   - **Purpose:** Logs MQTT payloads and updates metrics for visualization.
+
+6. **AWS IoT Core to Lambda (optional):**  
+   - **Trigger:** MQTT message or metric threshold  
+   - **Purpose:** Executes automation logic or processing routines.
+
+7. **Cloud to Factory (AWS IoT Core → Node-RED → Factory):**  
+   - **Protocol:** MQTT over TLS (cloud to Pi), then local MQTT (to factory)  
+   - **Purpose:** Sends commands (e.g., test messages) from cloud to the TxT Controller for physical execution.
 
 ## Factory Metrics and Variables
 
